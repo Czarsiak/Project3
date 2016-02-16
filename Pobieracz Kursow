@@ -1,0 +1,79 @@
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.htmlunit.HtmlUnitDriver;
+import org.openqa.selenium.ie.InternetExplorerDriver;
+
+public class PobieraczKursowSelenium {
+	private static final String adresNBP = "http://www.nbp.pl/home.aspx?f=/kursy/kursya.html";
+
+	private WebDriver dajDriver(String jaki) {
+		switch (jaki.toLowerCase()) {
+		case "firefox":
+			return new FirefoxDriver();
+		case "chrome":
+			return new ChromeDriver();
+		case "ie":
+			return new InternetExplorerDriver();
+
+		default:
+		case "htmlunit":
+			return new HtmlUnitDriver();
+		}
+	}
+
+	private WebDriver dajDriver() {
+		return dajDriver("htmlunit");
+	}
+
+	public Map<String, Kurs> pobierzKursy() {
+		HashMap<String, Kurs> kursy = new HashMap<>();
+		WebDriver driver = null;
+		try {
+			driver = dajDriver();
+			driver.get(adresNBP);
+			//System.out.println("Tytuł strony: " + driver.getTitle());
+
+			WebElement tabela = driver.findElement(By.xpath("//table[.//th = 'Nazwa waluty']"));
+			//System.out.println(tabela);
+
+			List<WebElement> wiersze = tabela.findElements(By.tagName("tr"));
+			//System.out.println("Tabela ma " + wiersze.size() + " wierszy");
+
+			for (WebElement tr : wiersze) {
+				try {
+					List<WebElement> td = tr.findElements(By.tagName("td"));
+					if (td.size() == 3) {
+						String nazwa = td.get(0).getText();
+						String tekstZKodem = td.get(1).getText();
+						try (Scanner scanner = new Scanner(tekstZKodem)) {
+							int liczba = scanner.nextInt();
+							String kod = scanner.next();
+							String tekstZKursem = td.get(2).getText();
+							tekstZKursem = tekstZKursem.replace(',', '.');
+							BigDecimal kursWymiany = new BigDecimal(tekstZKursem);
+							kursWymiany = kursWymiany.divide(new BigDecimal(liczba));
+							
+							Kurs nowy = new Kurs(kod, nazwa, kursWymiany);
+							kursy.put(kod, nowy);
+						}
+					}
+				} catch (Exception e) {
+					System.err.println("WARNING: był wyjątek " + e.getMessage());
+				}
+			}
+		} finally {
+			if (driver != null)
+				driver.close();
+		}
+		return kursy;
+	}
+}
