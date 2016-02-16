@@ -1,0 +1,16 @@
+import java.util.Map;
+
+public class WypiszKursy {
+
+	public static void main(String[] args) {
+		PobieraczKursowSelenium pobieracz = new PobieraczKursowSelenium();
+		Map<String, Kurs> kursy = pobieracz.pobierzKursy();
+		//System.out.println("Pobrane kursy: " + kursy);
+		
+		System.out.println("Pobrane kursy:");
+		
+		for (Kurs kurs : kursy.values()) {
+			System.out.println(kurs);
+		}
+	}
+}
