@@ -1,0 +1,47 @@
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+public class Kurs {
+	// pola niemodyfikowalne,
+	// wzorzec projektowy "value object"
+	// inne określenie: "immutable"
+	private final String kod;
+	private final String nazwa;
+	private final BigDecimal kursWymiany;
+
+	public Kurs(String kod, String nazwa, BigDecimal kursWymiany) {
+		super();
+		this.kod = kod;
+		this.nazwa = nazwa;
+		this.kursWymiany = kursWymiany;
+	}
+	
+	public BigDecimal ileZaZlotowki(BigDecimal zlotych) {
+		// dzielenie może wymagać zaokrąglenia; zaokrąglamy do 2 miejsc po przecinku, od połowy w górę
+		return zlotych.divide(kursWymiany, 2, RoundingMode.HALF_UP);
+	}
+
+	public BigDecimal ileZlotychZaWalute(BigDecimal kwota) {
+		// wynik mnożenia może być "zbyt dokładny"; zaokrąglamy do 2 miejsc po przecinku, od połowy w górę
+		return kwota.multiply(kursWymiany).setScale(2, RoundingMode.HALF_UP);
+	}
+
+	public String getKod() {
+		return kod;
+	}
+
+	public String getNazwa() {
+		return nazwa;
+	}
+
+	public BigDecimal getKursWymiany() {
+		return kursWymiany;
+	}
+	
+	@Override
+	public String toString() {
+		//return kod + " (" + nazwa + ") = " + kursWymiany + " PLN";
+		return String.format("%s (%s) = %s PLN", kod, nazwa, kursWymiany);
+	}
+	
+}
