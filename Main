@@ -1,0 +1,246 @@
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Map;
+
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
+public class KalkulatorWalut extends javax.swing.JFrame {
+    private javax.swing.JButton jButton_Przelicz, jButton_WalutaNaPln;
+    private javax.swing.JComboBox<String> jComboBox_Waluty;
+    private javax.swing.JLabel jLabel_PLN;
+    private javax.swing.JTextField jTextField_IleZlotych;
+    private javax.swing.JTextField jTextField_IleWaluty;
+    
+    private Map<String, Kurs> kursy;
+
+    /**
+     * Creates new form KalkulatorWalut
+     */
+    public KalkulatorWalut() {
+    	pobierzKursy();
+        initComponents();
+        registerEvents();
+    }
+    
+    private void pobierzKursy() {
+    	try {
+			PobieraczKursowSelenium pobieracz = new PobieraczKursowSelenium();
+			kursy = pobieracz.pobierzKursy();
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null,
+					"Nie da się pobrać kursów walut\n"+e.getMessage(),
+					"Błąd", JOptionPane.ERROR_MESSAGE);
+			throw e;
+		}
+    }
+    
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     */
+    private void initComponents() {
+
+        jTextField_IleZlotych = new javax.swing.JTextField();
+        jTextField_IleWaluty = new javax.swing.JTextField();
+        jLabel_PLN = new javax.swing.JLabel();
+        jComboBox_Waluty = new javax.swing.JComboBox<>();
+        jButton_Przelicz = new javax.swing.JButton();
+        jButton_WalutaNaPln = new javax.swing.JButton();
+
+        this.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        this.setTitle("Kalkulator walut");
+
+        jTextField_IleZlotych.setText("1.00");
+        jTextField_IleWaluty.setText("");
+        jLabel_PLN.setText("PLN");
+        
+        String[] tablicaWalut = kursy.keySet().toArray(new String[0]);
+        Arrays.sort(tablicaWalut);
+        jComboBox_Waluty.setModel(new javax.swing.DefaultComboBoxModel<>(tablicaWalut));
+        
+        jButton_Przelicz.setText("Przelicz \u2193 ");
+        jButton_WalutaNaPln.setText("Przelicz \u2191 ");
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jTextField_IleZlotych)
+                            .addComponent(jTextField_IleWaluty, javax.swing.GroupLayout.DEFAULT_SIZE, 120, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel_PLN)
+                            .addComponent(jComboBox_Waluty, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(layout.createSequentialGroup()
+                    		.addComponent(jButton_Przelicz)
+                    		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    		.addComponent(jButton_WalutaNaPln)))
+                .addContainerGap(120, Short.MAX_VALUE))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jTextField_IleZlotych, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel_PLN))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jTextField_IleWaluty, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jComboBox_Waluty, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                	.addComponent(jButton_Przelicz)
+                	.addComponent(jButton_WalutaNaPln))
+                .addContainerGap(80, Short.MAX_VALUE))
+        );
+
+        pack();
+    }
+
+    // obiekty DocumentListener tworzę raz i zapisuję sobie w polach private,
+    // aby nie tworzyć za każdym razem, gdy będę przywracał obserwowanie pól tekstowych
+    private DocumentListener obserwatorZlotych = new DocumentListener() {
+		public void removeUpdate(DocumentEvent e) {
+			przeliczZlotowkiNaWalute();
+		}
+
+		public void insertUpdate(DocumentEvent e) {
+			przeliczZlotowkiNaWalute();
+		}
+
+		public void changedUpdate(DocumentEvent e) {
+			przeliczZlotowkiNaWalute();
+		}
+	};
+	
+	private DocumentListener obserwatorWaluty = new DocumentListener() {
+		public void removeUpdate(DocumentEvent e) {
+			przeliczWaluteNaZlotowki();
+		}
+
+		public void insertUpdate(DocumentEvent e) {
+			przeliczWaluteNaZlotowki();
+		}
+
+		public void changedUpdate(DocumentEvent e) {
+			przeliczWaluteNaZlotowki();
+		}
+	};
+    
+	/** Włącza obserwowanie zmian w polach tekstowych.
+	 *  Zmiana jednej kwoty spowoduje przeliczenie drugiej.
+	 */
+	private void obserwujPolaTekstowe() {
+		jTextField_IleZlotych.getDocument().addDocumentListener(obserwatorZlotych);
+		jTextField_IleWaluty.getDocument().addDocumentListener(obserwatorWaluty);
+	}
+    
+	/** Wyłącza obserwowanie zmian w polach tekstowych.
+	 *  Wyłączamy na czas obsługi zdarzenia, aby nie wpaść w pętlę zdarzenie-reakcja.
+	 */
+	private void nieObserwujPolTekstowych() {
+		jTextField_IleZlotych.getDocument().removeDocumentListener(obserwatorZlotych);
+		jTextField_IleWaluty.getDocument().removeDocumentListener(obserwatorWaluty);
+	}
+    
+    /** Początkowa rejestracja reakcji na zdarzenia. */
+    private void registerEvents() {
+    	jButton_Przelicz.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				przeliczZlotowkiNaWalute();
+			}
+		});
+
+    	jButton_WalutaNaPln.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				przeliczWaluteNaZlotowki();
+			}
+		});
+
+    	obserwujPolaTekstowe();
+    }
+
+    /**
+     * @param zrodlo pole tekstowe, z którego czytamy kwotę
+     * @param cel pole tekstowe, do którego zapisujemy wynik
+     * @param czyPlnNaWalute czy wymieniamy PLN na walutę (true), czy odwrotnie (false)
+     */
+    private void przeliczOgolnie(JTextField zrodlo, JTextField cel, boolean czyPlnNaWalute) {
+		String tekstKwota = zrodlo.getText().replace(',', '.');
+		if(tekstKwota == null || tekstKwota.isEmpty())
+			return;
+			
+		try {
+			// wyłączam obsługę zdarzeń na czas realizacji tego
+			nieObserwujPolTekstowych();
+			
+			BigDecimal kwota = new BigDecimal(tekstKwota);
+			
+			String jakaWaluta = (String) jComboBox_Waluty.getSelectedItem();
+			Kurs kurs = kursy.get(jakaWaluta);
+			if(kurs == null) {
+				JOptionPane.showMessageDialog(this,
+						"Nieznana waluta " + jakaWaluta, "Błąd", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+
+			BigDecimal wynik;
+			if(czyPlnNaWalute)
+				wynik = kurs.ileZaZlotowki(kwota);
+			else
+				wynik = kurs.ileZlotychZaWalute(kwota);
+			cel.setText(wynik.toString());
+    	} catch (NumberFormatException e) {
+			JOptionPane.showMessageDialog(this,
+					"Niepoprawny format liczby " + tekstKwota, "Błąd", JOptionPane.ERROR_MESSAGE);
+		} finally {
+			// przywracam obsługę zdarzeń
+			obserwujPolaTekstowe();
+		}
+    }
+    
+    private void przeliczZlotowkiNaWalute() {
+    	System.out.println("Przeliczam zl na walute");
+    	przeliczOgolnie(jTextField_IleZlotych, jTextField_IleWaluty, true);
+    }
+
+    private void przeliczWaluteNaZlotowki() {
+    	System.out.println("Przeliczam walute na zl");
+    	przeliczOgolnie(jTextField_IleWaluty, jTextField_IleZlotych, false);
+    }
+
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (Exception ex) {
+            java.util.logging.Logger.getLogger(KalkulatorWalut.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new KalkulatorWalut().setVisible(true);
+            }
+        });
+    }
+}
